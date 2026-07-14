@@ -2,8 +2,8 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 
 export const SESSION_COOKIE_NAME = 'admin_session';
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Ringvallen1930!';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'change-this-secret-in-production';
 
 const sessionPayload = `${ADMIN_USERNAME}:${ADMIN_PASSWORD}:${ADMIN_SESSION_SECRET}`;
