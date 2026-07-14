@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Football Club Schedule
 
-## Getting Started
+Simple weekly schedule app for 4 football pitches (Ringvallen 1-4), with:
 
-First, run the development server:
+- Public Monday-Sunday schedule view
+- Half-pitch and full-pitch booking visualization
+- Admin login/logout
+- Admin Excel upload to refresh the week
+- Downloadable Excel template
+
+## Run Locally
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create `.env.local` in the project root and copy values from `.env.example`.
+
+3. Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Public schedule: http://localhost:3000
+- Admin: http://localhost:3000/admin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Admin Credentials
 
-## Learn More
+Set these in `.env.local`:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+ADMIN_USERNAME=Admin
+ADMIN_PASSWORD=Ringvallen1930!
+ADMIN_SESSION_SECRET=your-long-random-secret
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Excel Upload Format
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Vecka och veckostart anges i adminformuläret, så Excel-filen behöver bara innehålla själva bokningsraderna.
 
-## Deploy on Vercel
+### Kolumner och vad de betyder
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Dag: Vilken veckodag bokningen tillhör, till exempel Måndag eller Tisdag.
+- Tid: Starttid för bokningen, till exempel 18:00.
+- Sluttid: När bokningen slutar, till exempel 19:00.
+- Plan: Vilken plan bokningen gäller, till exempel Ringvallen 1.
+- Användning: Om det är halvplan eller helplan. Exempel: halv, hel, match, dubbel.
+- Användning: Om det är halvplan eller helplan. Skriv Halv A eller Halv B för halvplansbokningar. Om du bara skriver Halv tolkas det som Halv A.
+- Lag 1: Första lagets namn.
+- Lag 2: Valfritt. Andra lagets namn vid matcher eller dubbelbokningar. Lämna tomt för träning.
+- Omklädningsrum Lag 1: Omklädningsrum som tillhör Lag 1.
+- Omklädningsrum Lag 2: Valfritt. Omklädningsrum som tillhör Lag 2. Lämna tomt för träning.
+- Notering: Valfri extra information, till exempel halv A, halv B eller match.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Kolumnnamn kan även skrivas med vanliga engelska/alternativa varianter i importen, men mallen använder svenska rubriker.
+
+### Exempel på tillåtna kolumner i importen
+
+- Dag
+- Tid
+- Sluttid
+- Plan
+- Användning (`halv`, `enkel`, `hel`, `dubbel`, `match`)
+- Användning (`Halv A`, `Halv B`, `enkel`, `hel`, `dubbel`, `match`)
+- Lag 1
+- Lag 2 (valfri för träning)
+- Omklädningsrum Lag 1
+- Omklädningsrum Lag 2 (valfri)
+- Notering (valfri)
+
+You can download a ready template from:
+
+- `/api/template`
+
+The template also contains a separate "Läs mig" sheet with the same instructions directly inside the workbook.
+
+The "Schema" sheet also includes dropdowns for Dag, Plan, Användning and Omklädningsrum columns so the file is easier to fill out correctly.
+
+Or from the admin page button "Ladda ner Excel-mall".

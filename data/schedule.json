@@ -1,0 +1,114 @@
+{
+  "weekLabel": "Importerad från test 2.xlsx",
+  "weekNumber": 29,
+  "weekStartDate": "2026-07-13",
+  "lastUpdated": "2026-07-14T22:20:14.907Z",
+  "bookings": [
+    {
+      "id": "måndag-0-16:30",
+      "day": "Måndag",
+      "time": "16:30",
+      "endTime": "18:00",
+      "pitch": "Ringvallen 1",
+      "span": "single",
+      "halfSide": "A",
+      "team1": "U17",
+      "locker1": "Rum 7"
+    },
+    {
+      "id": "måndag-1-18:30",
+      "day": "Måndag",
+      "time": "18:30",
+      "endTime": "19:00",
+      "pitch": "Ringvallen 1",
+      "span": "single",
+      "halfSide": "A",
+      "team1": "u19",
+      "locker1": "Rum 2"
+    },
+    {
+      "id": "måndag-2-21:00",
+      "day": "Måndag",
+      "time": "21:00",
+      "endTime": "23:00",
+      "pitch": "Ringvallen 1",
+      "span": "double",
+      "team1": "Herr",
+      "team2": "Dam",
+      "locker1": "Rum 5",
+      "locker2": "Rum 6"
+    },
+    {
+      "id": "måndag-3-17:00",
+      "day": "Måndag",
+      "time": "17:00",
+      "endTime": "18:30",
+      "pitch": "Ringvallen 2",
+      "span": "double",
+      "team1": "F17",
+      "locker1": "Rum 3"
+    },
+    {
+      "id": "måndag-4-20:00",
+      "day": "Måndag",
+      "time": "20:00",
+      "endTime": "21:30",
+      "pitch": "Ringvallen 2",
+      "span": "single",
+      "halfSide": "A",
+      "team1": "F13",
+      "locker1": "Rum 2"
+    },
+    {
+      "id": "måndag-5-20:00",
+      "day": "Måndag",
+      "time": "20:00",
+      "endTime": "21:30",
+      "pitch": "Ringvallen 2",
+      "span": "single",
+      "halfSide": "A",
+      "team1": "F14-15",
+      "locker1": "Rum 1"
+    },
+    {
+      "id": "måndag-6-17:45",
+      "day": "Måndag",
+      "time": "17:45",
+      "endTime": "18:15",
+      "pitch": "Ringvallen 3",
+      "span": "double",
+      "team1": "P18",
+      "locker1": ""
+    },
+    {
+      "id": "tisdag-7-17:00",
+      "day": "Tisdag",
+      "time": "17:00",
+      "endTime": "18:00",
+      "pitch": "Ringvallen 2",
+      "span": "double",
+      "team1": "ICA MAXI FOTBOLLSSKOLA",
+      "locker1": ""
+    },
+    {
+      "id": "tisdag-8-17:00",
+      "day": "Tisdag",
+      "time": "17:00",
+      "endTime": "18:00",
+      "pitch": "Ringvallen 3",
+      "span": "double",
+      "team1": "ICA MAXI FOTBOLLSSKOLA",
+      "locker1": ""
+    },
+    {
+      "id": "tisdag-9-17:00",
+      "day": "Tisdag",
+      "time": "17:00",
+      "endTime": "18:00",
+      "pitch": "Ringvallen 4",
+      "span": "double",
+      "team1": "ICA MAXI FOTBOLLSSKOLA",
+      "locker1": ""
+    }
+  ]
+}
