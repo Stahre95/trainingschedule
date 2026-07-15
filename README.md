@@ -39,6 +39,16 @@ Admininloggningen kräver tre miljövariabler i både lokal utveckling och i Ver
 
 Om någon av dem saknas i deployment används inte en riktig adminkonfiguration, och inloggningen kommer att blockeras med ett tydligt felmeddelande.
 
+För att veckoschemat ska kunna sparas permanent på live-sidan behöver du också GitHub-baserad lagring:
+
+- `SCHEDULE_STORAGE_GITHUB_TOKEN`
+- `SCHEDULE_STORAGE_GITHUB_OWNER`
+- `SCHEDULE_STORAGE_GITHUB_REPO`
+- `SCHEDULE_STORAGE_GITHUB_BRANCH` - valfri, standard är `main`
+- `SCHEDULE_STORAGE_GITHUB_FILE_PATH` - valfri, standard är `data/schedule.json`
+
+Token behöver ha rätt att läsa och skriva den filen i repot som Vercel deployar från.
+
 ## Excel-format för uppladdning
 
 Vecka och veckostart anges i adminformuläret. Excel-filen behöver därför bara innehålla själva bokningsraderna.
