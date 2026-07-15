@@ -109,7 +109,8 @@ export default function AdminPage() {
         method: 'POST',
         body: formData,
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      const data = responseText ? (JSON.parse(responseText) as { ok?: boolean; bookings?: number; error?: string }) : {};
 
       if (!response.ok) {
         throw new Error(data.error || 'Uppladdning misslyckades.');
