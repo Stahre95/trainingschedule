@@ -20,7 +20,14 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: #dfe7df;
+  background-image:
+    linear-gradient(rgba(244, 248, 244, 0.58), rgba(244, 248, 244, 0.58)),
+    url('./src/img/background.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  color: #102033;
   font-family: var(--font-geist-sans), Helvetica, sans-serif;
 }

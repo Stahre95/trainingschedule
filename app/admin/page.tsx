@@ -14,6 +14,8 @@ export default function AdminPage() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [weekNumber, setWeekNumber] = useState('');
   const [weekStartDate, setWeekStartDate] = useState('');
+  const hasErrorStatus = /misslyck|välj|fel|error/i.test(status);
+  const weekOptions = Array.from({ length: 52 }, (_, index) => String(index + 1));
 
   useEffect(() => {
     // Kontrollerar om en giltig admins-session redan finns i webbläsaren.
@@ -129,8 +131,8 @@ export default function AdminPage() {
 
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
-        <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-slate-900/80 p-8 text-sm text-slate-300">
+      <div className="flex min-h-screen items-center justify-center bg-transparent px-6 py-10 text-slate-900">
+        <div className="w-full max-w-3xl rounded-[2rem] border border-white/45 bg-white/74 p-8 text-sm text-slate-700 shadow-xl shadow-slate-900/10 backdrop-blur-md">
           Kontrollerar adminsession...
         </div>
       </div>
@@ -138,12 +140,12 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6 rounded-[2rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/20">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-6 py-10 text-slate-900">
+      <div className="flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-white/45 bg-white/76 p-8 shadow-2xl shadow-slate-900/15 backdrop-blur-md">
         <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-emerald-400">Admin</p>
-          <h1 className="text-3xl font-semibold">Ladda upp veckans Excel-schema</h1>
-          <p className="text-sm leading-7 text-slate-400">
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-sky-800">Admin</p>
+          <h1 className="text-3xl font-semibold text-slate-950">Ladda upp veckans Excel-schema</h1>
+          <p className="text-sm leading-7 text-slate-700">
             Ange vecka, datumstart samt tider en gång här. Ladda sedan upp en Excel-fil som följer mallen. Det publika schemat uppdateras direkt efter uppladdning.
           </p>
         </div>
@@ -153,7 +155,7 @@ export default function AdminPage() {
             <div className="flex flex-wrap items-center gap-3">
               <a
                 href="/api/template"
-                className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/20"
+                className="rounded-full border border-sky-200 bg-sky-50/80 px-4 py-2 text-sm font-semibold text-sky-950 transition hover:bg-sky-50"
               >
                 Ladda ner Excel-mall
               </a>
@@ -161,7 +163,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoading}
-                className="rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-full border border-rose-300 bg-rose-100/85 px-4 py-2 text-sm font-semibold text-rose-900 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 Logga ut
               </button>
@@ -169,38 +171,42 @@ export default function AdminPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block rounded-2xl border border-white/10 bg-slate-800/80 p-4">
-                  <span className="mb-2 block text-sm font-semibold text-slate-200">Veckonummer</span>
-                  <input
-                    type="number"
-                    min="1"
+                <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
+                  <span className="mb-2 block text-sm font-semibold text-slate-800">Veckonummer</span>
+                  <select
                     value={weekNumber}
                     onChange={(event) => setWeekNumber(event.target.value)}
-                    placeholder="Ex. 32"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-0"
-                  />
+                    className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400"
+                  >
+                    <option value="">Välj vecka</option>
+                    {weekOptions.map((week) => (
+                      <option key={week} value={week}>
+                        Vecka {week}
+                      </option>
+                    ))}
+                  </select>
                 </label>
 
-                <label className="block rounded-2xl border border-white/10 bg-slate-800/80 p-4">
-                  <span className="mb-2 block text-sm font-semibold text-slate-200">Veckostart</span>
+                <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
+                  <span className="mb-2 block text-sm font-semibold text-slate-800">Veckostart</span>
                   <input
                     type="date"
                     value={weekStartDate}
                     onChange={(event) => setWeekStartDate(event.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-0"
+                    className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0"
                   />
                 </label>
               </div>
 
-              <label className="block rounded-2xl border border-dashed border-emerald-400/30 bg-emerald-500/10 p-4">
-                <span className="mb-2 block text-sm font-semibold text-emerald-200">Excel-fil</span>
-                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="w-full text-sm text-slate-200" />
+              <label className="block rounded-2xl border border-dashed border-sky-200 bg-sky-50/72 p-4">
+                <span className="mb-2 block text-sm font-semibold text-sky-950">Excel-fil</span>
+                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="w-full text-sm text-slate-800" />
               </label>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-full bg-sky-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isLoading ? 'Laddar upp...' : 'Importera schema'}
               </button>
@@ -208,41 +214,51 @@ export default function AdminPage() {
           </>
         ) : (
           <form onSubmit={handleLogin} className="space-y-5">
-            <label className="block rounded-2xl border border-white/10 bg-slate-800/80 p-4">
-              <span className="mb-2 block text-sm font-semibold text-slate-200">Admin-användarnamn</span>
+            <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
+              <span className="mb-2 block text-sm font-semibold text-slate-800">Admin-användarnamn</span>
               <input
                 type="text"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 placeholder="Ange användarnamn"
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-0"
+                className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400"
               />
             </label>
 
-            <label className="block rounded-2xl border border-white/10 bg-slate-800/80 p-4">
-              <span className="mb-2 block text-sm font-semibold text-slate-200">Admin-lösenord</span>
+            <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
+              <span className="mb-2 block text-sm font-semibold text-slate-800">Admin-lösenord</span>
               <input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Ange lösenord"
-                className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none ring-0"
+                className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400"
               />
             </label>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-full bg-sky-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isLoading ? 'Loggar in...' : 'Logga in'}
             </button>
           </form>
         )}
 
-        {status ? <p className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{status}</p> : null}
+        {status ? (
+          <p
+            className={
+              hasErrorStatus
+                ? 'rounded-2xl border border-rose-200 bg-rose-50/85 p-3 text-sm text-rose-900'
+                : 'rounded-2xl border border-emerald-200 bg-emerald-50/85 p-3 text-sm text-emerald-900'
+            }
+          >
+            {status}
+          </p>
+        ) : null}
 
-        <Link href="/" className="text-sm font-semibold text-slate-300 transition hover:text-white">
+        <Link href="/" className="text-sm font-semibold text-sky-900 transition hover:text-sky-700">
           ← Tillbaka till publikt schema
         </Link>
       </div>

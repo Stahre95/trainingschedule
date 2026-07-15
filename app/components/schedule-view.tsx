@@ -129,9 +129,9 @@ function BookingCard({ booking }: { booking: ScheduleBooking }) {
   const lockerLine = booking.locker2 ? `${booking.locker1} / ${booking.locker2}` : booking.locker1;
 
   return (
-    <article className="rounded-md border border-sky-900/60 bg-sky-950/85 px-1.5 py-1 text-[9px] text-sky-100">
-      <p className="truncate font-semibold text-white">{matchup}</p>
-      <p className="truncate text-[8px] text-sky-300/90">{lockerLine}</p>
+    <article className="rounded-md border border-sky-800/20 bg-white/88 px-2 py-1.5 text-[11px] text-slate-800 shadow-sm shadow-slate-900/8">
+      <p className="truncate font-semibold leading-tight text-slate-950">{matchup}</p>
+      <p className="truncate text-[10px] leading-tight text-slate-700">{lockerLine}</p>
     </article>
   );
 }
@@ -142,19 +142,17 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
   const isEmpty = timeline.length === 0;
 
   return (
-    <div className="h-full rounded-xl border border-slate-800/40 bg-[#ec7a36]/85 p-1">
-      <div className="grid h-full min-h-[132px] grid-cols-1 gap-1 content-start">
+    <div className="h-full rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
+      <div className="grid h-full min-h-[72px] grid-cols-1 gap-1 content-start">
         {timeline.map((slot) => (
-          <div key={slot.time} className="rounded-md border border-slate-900/30 bg-slate-900/15 p-1">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.1em] text-slate-950">
+          <div key={slot.time} className="rounded-md border border-slate-700/10 bg-white/28 p-1">
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900">
               {slot.time}–{slot.doubles[0]?.endTime ?? slot.singleA[0]?.endTime ?? slot.singleB[0]?.endTime ?? slot.time}
             </p>
 
             <div className="space-y-1">
               {slot.doubles.map((booking) => (
-                <div key={booking.id} className="rounded border border-sky-400/30 bg-sky-400/10 px-1 py-0.5">
-                  <BookingCard booking={booking} />
-                </div>
+                <BookingCard key={booking.id} booking={booking} />
               ))}
             </div>
 
@@ -180,7 +178,7 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
           </div>
         ))}
 
-        {isEmpty ? <div className="col-span-2 rounded-lg border border-dashed border-slate-700/50 bg-slate-900/15" /> : null}
+        {isEmpty ? <div className="col-span-2 rounded-lg bg-white/18" /> : null}
       </div>
     </div>
   );
@@ -292,33 +290,35 @@ export function ScheduleView() {
   }, [schedule.weekStartDate]);
 
   return (
-    <div className="h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_8%,rgba(56,189,248,0.2),transparent_25%),radial-gradient(circle_at_90%_0%,rgba(251,146,60,0.22),transparent_30%),linear-gradient(160deg,#07121f_0%,#0a1625_48%,#0f2136_100%)] p-3 text-slate-100 lg:p-4">
-      <div className="mx-auto flex h-full max-w-[99vw] flex-col gap-2 rounded-[1.5rem] border border-white/10 bg-slate-950/45 p-3 shadow-2xl shadow-black/40 backdrop-blur-md lg:p-4">
-        <header className="rounded-2xl border border-white/10 bg-slate-900/70 p-3">
+    <div className="mx-auto flex h-[95vh] w-[95vw] flex-col gap-2 overflow-hidden bg-transparent p-2 text-slate-950 lg:p-3">
+        <header className="rounded-2xl border border-white/35 bg-white/44 p-3">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">Ringvallen schema</p>
-              <h1 className="text-2xl font-bold tracking-tight text-white xl:text-3xl">Veckoplan för fotbollsplaner</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-800">Ringvallen schema</p>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 xl:text-3xl">Veckoplan för fotbollsplaner</h1>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="rounded-full border border-sky-400/40 bg-sky-400/15 px-3 py-1.5 text-xs font-semibold text-sky-100">
+              <div className="rounded-full border border-sky-700/30 bg-sky-100/85 px-3 py-1.5 text-xs font-semibold text-sky-900">
                 Vecka {weekNumber}
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden rounded-2xl border border-sky-700/20 bg-[#0f2c45]/70 p-2">
-          <div className="grid h-full grid-cols-[minmax(140px,170px)_repeat(7,minmax(150px,1fr))] gap-1.5">
-            <div className="rounded-xl border border-sky-800/40 bg-[#1f99c9] px-2 py-1.5 text-xs font-semibold text-slate-950">Plan</div>
+        <main className="flex-1 overflow-hidden rounded-2xl border border-white/35 bg-white/26 p-2">
+          <div className="grid h-full grid-cols-[minmax(140px,170px)_repeat(7,minmax(150px,1fr))] grid-rows-[62px_repeat(4,minmax(0,1fr))] content-start gap-x-1.5 gap-y-[6px]">
+            <div className="flex h-[62px] items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-sm font-semibold text-slate-950">Plan</div>
 
             {weekdayOrder.map((day) => (
-              <div key={day} className="rounded-xl border border-slate-700/70 bg-[#ec7a36] px-2 py-1 text-slate-950">
-                <p className="text-center text-base font-bold leading-tight xl:text-lg">{dayLabels[day]}</p>
-                <p className="text-center text-[10px] font-semibold text-slate-900/80">{formatWeekdayDate(weekStartDate, weekdayOrder.indexOf(day))}</p>
-                <div className="mt-1 grid grid-cols-2 overflow-hidden rounded-md border border-slate-900/30 text-center text-[11px] font-semibold">
-                  <span className="border-r border-slate-900/30 bg-[#f08f53] py-0.5">A</span>
-                  <span className="bg-[#f08f53] py-0.5">B</span>
+              <div
+                key={day}
+                className="flex h-[62px] flex-col justify-between overflow-hidden rounded-xl border border-cyan-700/18 bg-cyan-100/50 px-2 py-1 text-slate-950"
+              >
+                <p className="text-center text-base font-bold leading-none xl:text-lg">{dayLabels[day]}</p>
+                <p className="text-center text-[11px] font-semibold leading-none text-slate-800">{formatWeekdayDate(weekStartDate, weekdayOrder.indexOf(day))}</p>
+                <div className="grid grid-cols-2 overflow-hidden rounded-md border border-cyan-800/10 text-center text-[10px] font-semibold leading-none text-slate-900">
+                  <span className="border-r border-cyan-800/10 bg-cyan-50/44 py-[3px] pb-[5px]">A</span>
+                  <span className="bg-cyan-50/44 py-[3px] pb-[5px]">B</span>
                 </div>
               </div>
             ))}
@@ -327,10 +327,10 @@ export function ScheduleView() {
               <div key={pitch} className="contents">
                 <div
                   key={`${pitch}-label`}
-                  className="flex rounded-xl border border-sky-800/50 bg-[#1f99c9] px-2 py-2 text-slate-950"
+                  className="flex items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-2 text-center text-slate-950"
                 >
-                  <div className="my-auto">
-                    <p className="text-lg font-bold leading-tight xl:text-xl">{pitch}</p>
+                  <div className="my-auto w-full">
+                    <p className="text-xl font-bold leading-tight xl:text-2xl">{pitch}</p>
                   </div>
                 </div>
 
@@ -341,19 +341,18 @@ export function ScheduleView() {
             ))}
 
             {loading ? (
-              <div className="col-span-8 rounded-xl border border-dashed border-sky-700/60 bg-slate-900/30 p-2 text-center text-xs text-sky-100">
+              <div className="col-span-8 rounded-xl border border-sky-700/25 bg-white/34 p-2 text-center text-sm text-sky-950">
                 Laddar senaste schemat...
               </div>
             ) : null}
           </div>
         </main>
 
-        <footer className="rounded-2xl border border-white/10 bg-slate-900/60 px-3 py-1.5 text-[11px] text-slate-300">
+        <footer className="rounded-2xl border border-white/35 bg-white/44 px-3 py-1.5 text-[11px] text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-semibold text-sky-200">Uppdaterad: {formatUpdatedTimestamp(schedule.lastUpdated)}</p>
+            <p className="font-semibold text-sky-900">Uppdaterad: {formatUpdatedTimestamp(schedule.lastUpdated)}</p>
           </div>
         </footer>
-      </div>
     </div>
   );
 }
