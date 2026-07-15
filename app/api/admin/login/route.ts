@@ -3,10 +3,21 @@ import {
   getSessionToken,
   SESSION_COOKIE_NAME,
   sessionCookieOptions,
+  hasAdminCredentialsConfigured,
   validateCredentials,
 } from '../../../lib/admin-auth';
 
 export async function POST(request: Request) {
+  if (!hasAdminCredentialsConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          'Admin är inte konfigurerad i den här miljön. Lägg in ADMIN_USERNAME, ADMIN_PASSWORD och ADMIN_SESSION_SECRET i Vercel.',
+      },
+      { status: 500 },
+    );
+  }
+
   const payload = (await request.json().catch(() => null)) as
     | { username?: string; password?: string }
     | null;

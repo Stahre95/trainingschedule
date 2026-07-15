@@ -29,6 +29,16 @@ npm run dev
 - Publikt schema: http://localhost:3000
 - Admin: http://localhost:3000/admin
 
+## Miljövariabler
+
+Admininloggningen kräver tre miljövariabler i både lokal utveckling och i Vercel:
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+
+Om någon av dem saknas i deployment används inte en riktig adminkonfiguration, och inloggningen kommer att blockeras med ett tydligt felmeddelande.
+
 ## Excel-format för uppladdning
 
 Vecka och veckostart anges i adminformuläret. Excel-filen behöver därför bara innehålla själva bokningsraderna.
