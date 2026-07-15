@@ -178,7 +178,7 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
           </div>
         ))}
 
-        {isEmpty ? <div className="col-span-2 rounded-lg border border-dashed border-slate-600/16 bg-white/18" /> : null}
+        {isEmpty ? <div className="col-span-2 rounded-lg bg-white/18" /> : null}
       </div>
     </div>
   );
@@ -341,7 +341,7 @@ export function ScheduleView() {
             ))}
 
             {loading ? (
-              <div className="col-span-8 rounded-xl border border-dashed border-sky-700/25 bg-white/34 p-2 text-center text-sm text-sky-950">
+              <div className="col-span-8 rounded-xl border border-sky-700/25 bg-white/34 p-2 text-center text-sm text-sky-950">
                 Laddar senaste schemat...
               </div>
             ) : null}
