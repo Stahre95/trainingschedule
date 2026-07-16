@@ -142,8 +142,8 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
   const isEmpty = timeline.length === 0;
 
   return (
-    <div className="h-full rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
-      <div className="grid h-full min-h-[72px] grid-cols-1 gap-1 content-start">
+    <div className="rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
+      <div className="grid min-h-[72px] grid-cols-1 gap-1 content-start">
         {timeline.map((slot) => (
           <div key={slot.time} className="rounded-md border border-slate-700/10 bg-white/28 p-1">
             <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900">
@@ -290,7 +290,7 @@ export function ScheduleView() {
   }, [schedule.weekStartDate]);
 
   return (
-    <div className="mx-auto flex h-[95vh] w-[95vw] flex-col gap-2 overflow-hidden bg-transparent p-2 text-slate-950 lg:p-3">
+    <div className="mx-auto flex w-[95vw] max-w-[95vw] flex-col gap-2 bg-transparent p-2 text-slate-950 lg:p-3">
         <header className="rounded-2xl border border-white/35 bg-white/44 p-3">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
@@ -305,8 +305,8 @@ export function ScheduleView() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden rounded-2xl border border-white/35 bg-white/26 p-2">
-          <div className="grid h-full grid-cols-[minmax(140px,170px)_repeat(7,minmax(150px,1fr))] grid-rows-[62px_repeat(4,minmax(0,1fr))] content-start gap-x-1.5 gap-y-[6px]">
+        <main className="overflow-visible rounded-2xl border border-white/35 bg-white/26 p-2">
+          <div className="grid grid-cols-[minmax(140px,170px)_repeat(7,minmax(150px,1fr))] grid-rows-[62px_repeat(4,auto)] content-start gap-x-1.5 gap-y-[6px]">
             <div className="flex h-[62px] items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-sm font-semibold text-slate-950">Plan</div>
 
             {weekdayOrder.map((day) => (
