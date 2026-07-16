@@ -26,18 +26,33 @@ function encodeGitHubContent(content: string) {
   return Buffer.from(content, 'utf8').toString('base64');
 }
 
-async function readFromGitHub(config: NonNullable<ReturnType<typeof getGitHubStorageConfig>>) {
-  const response = await fetch(
-    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}?ref=${encodeURIComponent(config.branch)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${config.token}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-      cache: 'no-store',
+async function fetchGitHubContent(
+  config: NonNullable<ReturnType<typeof getGitHubStorageConfig>>,
+  withRef = true,
+) {
+  const url = withRef
+    ? `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}?ref=${encodeURIComponent(config.branch)}`
+    : `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${config.token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
     },
-  );
+    cache: 'no-store',
+  });
+
+  if (withRef && response.status === 404) {
+    // Some repos can fail ref lookups even when default-branch lookup works.
+    return fetchGitHubContent(config, false);
+  }
+
+  return response;
+}
+
+async function readFromGitHub(config: NonNullable<ReturnType<typeof getGitHubStorageConfig>>) {
+  const response = await fetchGitHubContent(config);
 
   if (!response.ok) {
     throw new Error(`GitHub-läsning misslyckades (${response.status}).`);
@@ -53,17 +68,7 @@ async function readFromGitHub(config: NonNullable<ReturnType<typeof getGitHubSto
 }
 
 async function writeToGitHub(config: NonNullable<ReturnType<typeof getGitHubStorageConfig>>, payload: ScheduleData) {
-  const currentResponse = await fetch(
-    `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.filePath}?ref=${encodeURIComponent(config.branch)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${config.token}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-      cache: 'no-store',
-    },
-  );
+  const currentResponse = await fetchGitHubContent(config);
 
   let sha: string | undefined;
   if (currentResponse.ok) {

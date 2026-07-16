@@ -139,10 +139,12 @@ export async function POST(request: Request) {
 
     try {
       await saveScheduleData(payload);
-    } catch {
+    } catch (error) {
+      const details = error instanceof Error ? error.message : 'Okänt fel.';
+      console.error('Kunde inte spara schema:', details);
       return NextResponse.json(
         {
-          error: 'Schemat kunde inte sparas. Kontrollera att lagringen i Vercel är konfigurerad.',
+          error: `Schemat kunde inte sparas. ${details}`,
         },
         { status: 500 },
       );
