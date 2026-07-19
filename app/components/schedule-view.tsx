@@ -129,7 +129,7 @@ function BookingCard({ booking }: { booking: ScheduleBooking }) {
   const lockerLine = booking.locker2 ? `${booking.locker1} / ${booking.locker2}` : booking.locker1;
 
   return (
-    <article className="rounded-md border border-sky-800/20 bg-white/88 px-2 py-1.5 text-[11px] text-slate-800 shadow-sm shadow-slate-900/8">
+    <article className="min-w-0 rounded-md border border-sky-800/20 bg-white/88 px-2 py-1.5 text-[11px] text-slate-800 shadow-sm shadow-slate-900/8">
       <p className="truncate font-semibold leading-tight text-slate-950">{matchup}</p>
       <p className="truncate text-[10px] leading-tight text-slate-700">{lockerLine}</p>
     </article>
@@ -142,10 +142,10 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
   const isEmpty = timeline.length === 0;
 
   return (
-    <div className="rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
+    <div className="min-w-0 rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
       <div className="grid min-h-[72px] grid-cols-1 gap-1 content-start">
         {timeline.map((slot) => (
-          <div key={slot.time} className="rounded-md border border-slate-700/10 bg-white/28 p-1">
+          <div key={slot.time} className="min-w-0 rounded-md border border-slate-700/10 bg-white/28 p-1">
             <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900">
               {slot.time}–{slot.doubles[0]?.endTime ?? slot.singleA[0]?.endTime ?? slot.singleB[0]?.endTime ?? slot.time}
             </p>
@@ -305,16 +305,16 @@ export function ScheduleView() {
           </div>
         </header>
 
-        <main className="overflow-visible rounded-2xl border border-white/35 bg-white/26 p-2">
-          <div className="grid grid-cols-[minmax(140px,170px)_repeat(7,minmax(150px,1fr))] grid-rows-[62px_repeat(4,auto)] content-start gap-x-1.5 gap-y-[6px]">
-            <div className="flex h-[62px] items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-sm font-semibold text-slate-950">Plan</div>
+        <main className="overflow-hidden rounded-2xl border border-white/35 bg-white/26 p-2">
+          <div className="grid grid-cols-[clamp(92px,11vw,170px)_repeat(7,minmax(0,1fr))] grid-rows-[62px_repeat(4,auto)] content-start gap-x-1 gap-y-[6px]">
+            <div className="flex h-[62px] min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-sm font-semibold text-slate-950">Plan</div>
 
             {weekdayOrder.map((day) => (
               <div
                 key={day}
-                className="flex h-[62px] flex-col justify-between overflow-hidden rounded-xl border border-cyan-700/18 bg-cyan-100/50 px-2 py-1 text-slate-950"
+                className="flex h-[62px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-cyan-700/18 bg-cyan-100/50 px-2 py-1 text-slate-950"
               >
-                <p className="text-center text-base font-bold leading-none xl:text-lg">{dayLabels[day]}</p>
+                <p className="text-center text-[clamp(0.95rem,1.4vw,1.125rem)] font-bold leading-none">{dayLabels[day]}</p>
                 <p className="text-center text-[11px] font-semibold leading-none text-slate-800">{formatWeekdayDate(weekStartDate, weekdayOrder.indexOf(day))}</p>
                 <div className="grid grid-cols-2 overflow-hidden rounded-md border border-cyan-800/10 text-center text-[10px] font-semibold leading-none text-slate-900">
                   <span className="border-r border-cyan-800/10 bg-cyan-50/44 py-[3px] pb-[5px]">A</span>
@@ -327,10 +327,10 @@ export function ScheduleView() {
               <div key={pitch} className="contents">
                 <div
                   key={`${pitch}-label`}
-                  className="flex items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-2 text-center text-slate-950"
+                  className="flex min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-2 text-center text-slate-950"
                 >
                   <div className="my-auto w-full">
-                    <p className="text-xl font-bold leading-tight xl:text-2xl">{pitch}</p>
+                    <p className="text-[clamp(1rem,1.8vw,1.5rem)] font-bold leading-tight">{pitch}</p>
                   </div>
                 </div>
 
