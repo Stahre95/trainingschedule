@@ -237,12 +237,38 @@ type ScheduleViewProps = {
   initialError?: string;
 };
 
+function detectLegacyMode() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return false;
+  }
+
+  const supports = typeof CSS !== 'undefined' && typeof CSS.supports === 'function';
+  const hasGridSupport = supports ? CSS.supports('display', 'grid') : false;
+  const hasContentsSupport = supports ? CSS.supports('display', 'contents') : false;
+  const hasClampSupport = supports ? CSS.supports('width', 'clamp(10px, 5vw, 20px)') : false;
+
+  let tailwindGridApplied = false;
+  const probe = document.createElement('div');
+  probe.className = 'grid';
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  document.body.appendChild(probe);
+  try {
+    tailwindGridApplied = getComputedStyle(probe).display === 'grid';
+  } finally {
+    probe.remove();
+  }
+
+  return !tailwindGridApplied || !hasGridSupport || !hasContentsSupport || !hasClampSupport;
+}
+
 export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProps) {
   // Huvudvyn som hämtar schemat och bygger hela TV-layouten.
   const [schedule, setSchedule] = useState<ScheduleData | null>(initialSchedule);
   const [loading, setLoading] = useState(!initialSchedule);
   const [loadError, setLoadError] = useState(initialError ?? '');
   const [lastAttemptAt, setLastAttemptAt] = useState<string>('');
+  const [legacyMode] = useState(() => detectLegacyMode());
 
   useEffect(() => {
     let active = true;
@@ -346,6 +372,24 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
     return getStartOfIsoWeek(new Date());
   }, [schedule]);
 
+  const legacyPitchData = useMemo(() => {
+    if (!schedule) {
+      return [] as Array<{
+        pitch: string;
+        perDay: Array<{ dayLabel: string; dateLabel: string; bookings: ScheduleBooking[] }>;
+      }>;
+    }
+
+    return pitchRows.map((pitch) => ({
+      pitch,
+      perDay: weekdayOrder.map((day, dayIndex) => ({
+        dayLabel: dayLabels[day],
+        dateLabel: formatWeekdayDate(weekStartDate, dayIndex),
+        bookings: schedule.bookings.filter((booking) => normalizeDay(booking.day) === day && matchesPitch(booking.pitch, pitch)),
+      })),
+    }));
+  }, [schedule, weekStartDate]);
+
   if (!schedule) {
     return (
       <div className="mx-auto flex h-screen w-screen items-center justify-center bg-transparent p-6 text-slate-950">
@@ -356,6 +400,68 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
             Diagnostik: {lastAttemptAt ? `Senaste försök ${formatUpdatedTimestamp(lastAttemptAt)}.` : 'Inget svar ännu.'}
           </p>
           <p className="mt-1 text-xs text-slate-600">Testa att öppna /api/schedule direkt i TV-webbläsaren.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (legacyMode) {
+    return (
+      <div style={{ margin: '0 auto', width: '100%', maxWidth: '100%', padding: '12px', color: '#0f172a', boxSizing: 'border-box' }}>
+        <div style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(15,23,42,0.2)', borderRadius: '10px', padding: '10px 12px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>Ringvallen schema</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px' }}>Veckoplan för fotbollsplaner - Vecka {weekNumber}</div>
+          {loadError ? <div style={{ marginTop: '6px', fontSize: '12px', color: '#92400e' }}>Info: {loadError}</div> : null}
+        </div>
+
+        <div style={{ marginTop: '10px', overflowX: 'auto', background: 'rgba(255,255,255,0.84)', border: '1px solid rgba(15,23,42,0.15)', borderRadius: '10px', padding: '10px' }}>
+          <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '1280px' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #94a3b8', padding: '8px', fontSize: '14px' }}>Plan</th>
+                {weekdayOrder.map((day, dayIndex) => (
+                  <th key={day} style={{ textAlign: 'left', borderBottom: '1px solid #94a3b8', padding: '8px', fontSize: '13px' }}>
+                    {dayLabels[day]} {formatWeekdayDate(weekStartDate, dayIndex)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {legacyPitchData.map((pitchRow) => (
+                <tr key={pitchRow.pitch}>
+                  <td style={{ verticalAlign: 'top', borderBottom: '1px solid #cbd5e1', padding: '8px', fontWeight: 700 }}>{pitchRow.pitch}</td>
+                  {pitchRow.perDay.map((dayRow) => (
+                    <td key={`${pitchRow.pitch}-${dayRow.dayLabel}`} style={{ verticalAlign: 'top', borderBottom: '1px solid #cbd5e1', padding: '8px' }}>
+                      {dayRow.bookings.length === 0 ? (
+                        <div style={{ color: '#64748b', fontSize: '12px' }}>-</div>
+                      ) : (
+                        <div>
+                          {buildTimeline(dayRow.bookings).map((slot) => (
+                            <div key={`${pitchRow.pitch}-${dayRow.dayLabel}-${slot.time}`} style={{ marginBottom: '8px', fontSize: '12px', lineHeight: 1.35 }}>
+                              <div style={{ fontWeight: 700 }}>
+                                {slot.time}-{slot.doubles[0]?.endTime ?? slot.singleA[0]?.endTime ?? slot.singleB[0]?.endTime ?? slot.time}
+                              </div>
+                              {[...slot.doubles, ...slot.singleA, ...slot.singleB].map((booking) => (
+                                <div key={booking.id}>
+                                  {booking.team2 ? `${booking.team1} vs ${booking.team2}` : booking.team1}
+                                  {booking.locker1 ? ` (${booking.locker2 ? `${booking.locker1} / ${booking.locker2}` : booking.locker1})` : ''}
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ marginTop: '8px', fontSize: '12px', color: '#334155', background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(15,23,42,0.12)', borderRadius: '8px', padding: '8px 10px' }}>
+          Uppdaterad: {formatUpdatedTimestamp(schedule.lastUpdated)}
+          {lastAttemptAt ? ` | Senaste synk: ${formatUpdatedTimestamp(lastAttemptAt)}` : ''}
         </div>
       </div>
     );
