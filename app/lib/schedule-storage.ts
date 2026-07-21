@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'node:path';
-import { defaultSchedule, type ScheduleData } from './schedule';
+import { type ScheduleData } from './schedule';
 
 const LOCAL_SCHEDULE_PATH = path.join(process.cwd(), 'data', 'schedule.json');
 
@@ -106,7 +106,7 @@ async function readFromLocalDisk() {
     const fileContents = await fs.readFile(LOCAL_SCHEDULE_PATH, 'utf8');
     return JSON.parse(fileContents) as ScheduleData;
   } catch {
-    return defaultSchedule;
+    return null;
   }
 }
 
@@ -116,12 +116,18 @@ export async function readScheduleData() {
   if (config) {
     try {
       return await readFromGitHub(config);
-    } catch {
-      return defaultSchedule;
+    } catch (error) {
+      const details = error instanceof Error ? error.message : 'Okänt fel.';
+      console.error('Kunde inte läsa schema från GitHub, försöker lokal fil:', details);
     }
   }
 
-  return readFromLocalDisk();
+  const localSchedule = await readFromLocalDisk();
+  if (localSchedule) {
+    return localSchedule;
+  }
+
+  return null;
 }
 
 export async function saveScheduleData(payload: ScheduleData) {
