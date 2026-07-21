@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { defaultSchedule, type ScheduleBooking, type ScheduleData, weekdayOrder } from '../lib/schedule';
+import { type ScheduleBooking, type ScheduleData, weekdayOrder } from '../lib/schedule';
 
 const pitchRows = ['Ringvallen 1', 'Ringvallen 2', 'Ringvallen 3', 'Ringvallen 4'] as const;
 
@@ -234,22 +234,40 @@ function formatUpdatedTimestamp(value: string) {
 
 export function ScheduleView() {
   // Huvudvyn som hämtar schemat och bygger hela TV-layouten.
-  const [schedule, setSchedule] = useState<ScheduleData>(defaultSchedule);
+  const [schedule, setSchedule] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let active = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     async function loadSchedule() {
       try {
-        const response = await fetch('/api/schedule');
-        const data = (await response.json()) as ScheduleData;
-        if (active) {
-          setSchedule(data);
+        const response = await fetch('/api/schedule', { cache: 'no-store' });
+        const data = (await response.json()) as
+          | ScheduleData
+          | {
+              ok: false;
+              error?: string;
+            };
+
+        if (!response.ok) {
+          const errorMessage =
+            typeof data === 'object' && data && 'error' in data && typeof data.error === 'string'
+              ? data.error
+              : 'Schemat gick inte att ladda.';
+          throw new Error(errorMessage);
         }
-      } catch {
+
         if (active) {
-          setSchedule(defaultSchedule);
+          setSchedule(data as ScheduleData);
+          setLoadError('');
+        }
+      } catch (error) {
+        if (active) {
+          setSchedule(null);
+          setLoadError(error instanceof Error ? error.message : 'Schemat gick inte att ladda.');
         }
       } finally {
         if (active) {
@@ -259,27 +277,46 @@ export function ScheduleView() {
     }
 
     loadSchedule();
+    intervalId = setInterval(() => {
+      loadSchedule();
+    }, 60_000);
+
     return () => {
       active = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, []);
 
-  const matrix = useMemo(() => {
+  const matrix = useMemo<ScheduleBooking[][][]>(() => {
+    if (!schedule) {
+      return [];
+    }
+
     return pitchRows.map((pitch) => {
       return weekdayOrder.map((day) => {
         return schedule.bookings.filter((booking) => normalizeDay(booking.day) === day && matchesPitch(booking.pitch, pitch));
       });
     });
-  }, [schedule.bookings]);
+  }, [schedule]);
 
   const weekNumber = useMemo(() => {
+    if (!schedule) {
+      return getIsoWeekNumber(new Date());
+    }
+
     if (schedule.weekNumber) {
       return schedule.weekNumber;
     }
     return getIsoWeekNumber(new Date());
-  }, [schedule.weekNumber]);
+  }, [schedule]);
 
   const weekStartDate = useMemo(() => {
+    if (!schedule) {
+      return getStartOfIsoWeek(new Date());
+    }
+
     if (schedule.weekStartDate) {
       const parsed = new Date(schedule.weekStartDate);
       if (!Number.isNaN(parsed.getTime())) {
@@ -287,7 +324,18 @@ export function ScheduleView() {
       }
     }
     return getStartOfIsoWeek(new Date());
-  }, [schedule.weekStartDate]);
+  }, [schedule]);
+
+  if (!schedule) {
+    return (
+      <div className="mx-auto flex h-screen w-screen items-center justify-center bg-transparent p-6 text-slate-950">
+        <div className="rounded-2xl border border-white/45 bg-white/72 px-8 py-6 text-center shadow-xl shadow-slate-900/10 backdrop-blur-md">
+          <p className="text-2xl font-bold text-slate-950">Schemat gick inte att ladda.</p>
+          <p className="mt-2 text-sm font-medium text-slate-700">{loading ? 'Försöker hämta schema...' : loadError || 'Kontakta administratör.'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-[95vw] max-w-[95vw] flex-col gap-2 bg-transparent p-2 text-slate-950 lg:p-3">
