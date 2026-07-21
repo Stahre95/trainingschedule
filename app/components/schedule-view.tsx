@@ -232,19 +232,30 @@ function formatUpdatedTimestamp(value: string) {
   return formatter.format(parsed);
 }
 
-export function ScheduleView() {
+type ScheduleViewProps = {
+  initialSchedule: ScheduleData | null;
+  initialError?: string;
+};
+
+export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProps) {
   // Huvudvyn som hämtar schemat och bygger hela TV-layouten.
-  const [schedule, setSchedule] = useState<ScheduleData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [schedule, setSchedule] = useState<ScheduleData | null>(initialSchedule);
+  const [loading, setLoading] = useState(!initialSchedule);
+  const [loadError, setLoadError] = useState(initialError ?? '');
+  const [lastAttemptAt, setLastAttemptAt] = useState<string>('');
 
   useEffect(() => {
     let active = true;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     async function loadSchedule() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort('timeout');
+      }, 12000);
+
       try {
-        const response = await fetch('/api/schedule', { cache: 'no-store' });
+        const response = await fetch('/api/schedule', { cache: 'no-store', signal: controller.signal });
         const data = (await response.json()) as
           | ScheduleData
           | {
@@ -263,13 +274,22 @@ export function ScheduleView() {
         if (active) {
           setSchedule(data as ScheduleData);
           setLoadError('');
+          setLastAttemptAt(new Date().toISOString());
         }
       } catch (error) {
+        const isTimeout = error instanceof DOMException && error.name === 'AbortError';
+        const message = isTimeout
+          ? 'Nätverksförfrågan till schemat tog för lång tid (timeout).'
+          : error instanceof Error
+            ? error.message
+            : 'Schemat gick inte att ladda.';
+
         if (active) {
-          setSchedule(null);
-          setLoadError(error instanceof Error ? error.message : 'Schemat gick inte att ladda.');
+          setLoadError(message);
+          setLastAttemptAt(new Date().toISOString());
         }
       } finally {
+        clearTimeout(timeoutId);
         if (active) {
           setLoading(false);
         }
@@ -329,9 +349,13 @@ export function ScheduleView() {
   if (!schedule) {
     return (
       <div className="mx-auto flex h-screen w-screen items-center justify-center bg-transparent p-6 text-slate-950">
-        <div className="rounded-2xl border border-white/45 bg-white/72 px-8 py-6 text-center shadow-xl shadow-slate-900/10 backdrop-blur-md">
+        <div className="max-w-[920px] rounded-2xl border border-white/45 bg-white/72 px-8 py-6 text-center shadow-xl shadow-slate-900/10 backdrop-blur-md">
           <p className="text-2xl font-bold text-slate-950">Schemat gick inte att ladda.</p>
           <p className="mt-2 text-sm font-medium text-slate-700">{loading ? 'Försöker hämta schema...' : loadError || 'Kontakta administratör.'}</p>
+          <p className="mt-4 text-xs text-slate-600">
+            Diagnostik: {lastAttemptAt ? `Senaste försök ${formatUpdatedTimestamp(lastAttemptAt)}.` : 'Inget svar ännu.'}
+          </p>
+          <p className="mt-1 text-xs text-slate-600">Testa att öppna /api/schedule direkt i TV-webbläsaren.</p>
         </div>
       </div>
     );
