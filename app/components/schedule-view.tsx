@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { type ScheduleBooking, type ScheduleData, weekdayOrder } from '../lib/schedule';
 
 const pitchRows = ['Ringvallen 1', 'Ringvallen 2', 'Ringvallen 3', 'Ringvallen 4'] as const;
-const viewRotationMs = 15_000;
+const view1RotationMs = 15_000;
+const view2RotationMs = 30_000;
 
 const dayLabels: Record<(typeof weekdayOrder)[number], string> = {
   Monday: 'Måndag',
@@ -440,14 +441,15 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
   }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const delay = activeView === 'week' ? view1RotationMs : view2RotationMs;
+    const timeoutId = setTimeout(() => {
       setActiveView((currentView) => (currentView === 'week' ? 'today' : 'week'));
-    }, viewRotationMs);
+    }, delay);
 
     return () => {
-      clearInterval(intervalId);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [activeView]);
 
   const matrix = useMemo<ScheduleBooking[][][]>(() => {
     if (!schedule) {
@@ -674,7 +676,6 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
         <footer className="rounded-2xl border border-white/35 bg-white/44 px-3 py-1.5 text-[11px] text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-semibold text-sky-900">Uppdaterad: {formatUpdatedTimestamp(schedule.lastUpdated)}</p>
-            {activeView === 'today' ? <p className="text-slate-600">Växlar vy automatiskt var 15:e sekund.</p> : null}
           </div>
         </footer>
     </div>
