@@ -3,6 +3,23 @@
 import Link from 'next/link';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 
+function getIsoWeekNumberFromDate(value: string) {
+  const [rawYear, rawMonth, rawDay] = value.split('-');
+  const year = Number(rawYear);
+  const month = Number(rawMonth);
+  const day = Number(rawDay);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  const dayNumber = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNumber);
+  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+  return Math.ceil(((utcDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
 export default function AdminPage() {
   // Adminpanelen används för att logga in och ladda upp veckans schema.
   const [username, setUsername] = useState('');
@@ -15,7 +32,6 @@ export default function AdminPage() {
   const [weekNumber, setWeekNumber] = useState('');
   const [weekStartDate, setWeekStartDate] = useState('');
   const hasErrorStatus = /misslyck|välj|fel|error/i.test(status);
-  const weekOptions = Array.from({ length: 52 }, (_, index) => String(index + 1));
 
   useEffect(() => {
     // Kontrollerar om en giltig admins-session redan finns i webbläsaren.
@@ -130,6 +146,19 @@ export default function AdminPage() {
     setFile(nextFile);
   }
 
+  function handleWeekStartDateChange(event: ChangeEvent<HTMLInputElement>) {
+    const nextWeekStartDate = event.target.value;
+    setWeekStartDate(nextWeekStartDate);
+
+    if (!nextWeekStartDate) {
+      setWeekNumber('');
+      return;
+    }
+
+    const derivedWeekNumber = getIsoWeekNumberFromDate(nextWeekStartDate);
+    setWeekNumber(derivedWeekNumber ? String(derivedWeekNumber) : '');
+  }
+
   if (isCheckingSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-transparent px-6 py-10 text-slate-900">
@@ -145,9 +174,9 @@ export default function AdminPage() {
       <div className="flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-white/45 bg-white/76 p-8 shadow-2xl shadow-slate-900/15 backdrop-blur-md">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-sky-800">Admin</p>
-          <h1 className="text-3xl font-semibold text-slate-950">Ladda upp veckans Excel-schema</h1>
+          <h1 className="text-3xl font-semibold text-slate-950">Ladda upp veckans schema</h1>
           <p className="text-sm leading-7 text-slate-700">
-            Ange vecka, datumstart samt tider en gång här. Ladda sedan upp en Excel-fil som följer mallen. Det publika schemat uppdateras direkt efter uppladdning.
+            Ange datum för veckans start och ladda upp en excel-fil med bokningar. Du kan även ladda ner en mall för att fylla i bokningarna.
           </p>
         </div>
 
@@ -171,29 +200,13 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1">
                 <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
-                  <span className="mb-2 block text-sm font-semibold text-slate-800">Veckonummer</span>
-                  <select
-                    value={weekNumber}
-                    onChange={(event) => setWeekNumber(event.target.value)}
-                    className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400"
-                  >
-                    <option value="">Välj vecka</option>
-                    {weekOptions.map((week) => (
-                      <option key={week} value={week}>
-                        Vecka {week}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block rounded-2xl border border-sky-100/90 bg-white/62 p-4 shadow-sm shadow-slate-900/5">
-                  <span className="mb-2 block text-sm font-semibold text-slate-800">Veckostart</span>
+                  <span className="mb-2 block text-sm font-semibold text-slate-800">Datum för veckans start</span>
                   <input
                     type="date"
                     value={weekStartDate}
-                    onChange={(event) => setWeekStartDate(event.target.value)}
+                    onChange={handleWeekStartDateChange}
                     className="w-full rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-0"
                   />
                 </label>
@@ -260,7 +273,7 @@ export default function AdminPage() {
         ) : null}
 
         <Link href="/" className="text-sm font-semibold text-sky-900 transition hover:text-sky-700">
-          ← Tillbaka till publikt schema
+          ← Tillbaka till schemat
         </Link>
       </div>
     </div>

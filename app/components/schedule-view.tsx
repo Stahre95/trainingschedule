@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type ScheduleBooking, type ScheduleData, weekdayOrder } from '../lib/schedule';
 
 const pitchRows = ['Ringvallen 1', 'Ringvallen 2', 'Ringvallen 3', 'Ringvallen 4'] as const;
+const viewRotationMs = 15_000;
 
 const dayLabels: Record<(typeof weekdayOrder)[number], string> = {
   Monday: 'Måndag',
@@ -97,6 +98,8 @@ type TimeSlot = {
   singleB: ScheduleBooking[];
 };
 
+type DisplayMode = 'week' | 'today';
+
 function buildTimeline(bookings: ScheduleBooking[]) {
   // Grupperar bokningar per tid och delar upp dem i helplan, A och B för layouten.
   const byTime = new Map<string, TimeSlot>();
@@ -123,15 +126,22 @@ function buildTimeline(bookings: ScheduleBooking[]) {
   return [...byTime.values()].sort((left, right) => timeToMinutes(left.time) - timeToMinutes(right.time));
 }
 
-function BookingCard({ booking }: { booking: ScheduleBooking }) {
+function BookingCard({ booking, density = 'compact' }: { booking: ScheduleBooking; density?: 'compact' | 'comfortable' }) {
   // Visar en kompakt bokningsrad med lag och omklädningsrum.
   const matchup = booking.team2 ? `${booking.team1} vs ${booking.team2}` : booking.team1;
   const lockerLine = booking.locker2 ? `${booking.locker1} / ${booking.locker2}` : booking.locker1;
+  const isComfortable = density === 'comfortable';
 
   return (
-    <article className="min-w-0 rounded-md border border-sky-800/20 bg-white/88 px-2 py-1.5 text-[11px] text-slate-800 shadow-sm shadow-slate-900/8">
-      <p className="truncate font-semibold leading-tight text-slate-950">{matchup}</p>
-      <p className="truncate text-[10px] leading-tight text-slate-700">{lockerLine}</p>
+    <article
+      className={
+        isComfortable
+          ? 'min-w-0 rounded-xl border border-sky-800/20 bg-white/92 px-3 py-2 text-sm text-slate-800 shadow-sm shadow-slate-900/8'
+          : 'min-w-0 rounded-md border border-sky-800/20 bg-white/88 px-2.5 py-2 text-xs text-slate-800 shadow-sm shadow-slate-900/8'
+      }
+    >
+      <p className={isComfortable ? 'truncate font-semibold leading-tight text-slate-950' : 'truncate font-semibold leading-tight text-slate-950'}>{matchup}</p>
+      <p className={isComfortable ? 'truncate text-xs leading-tight text-slate-700' : 'truncate text-[11px] leading-tight text-slate-700'}>{lockerLine}</p>
     </article>
   );
 }
@@ -143,10 +153,10 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
 
   return (
     <div className="min-w-0 rounded-xl border border-cyan-800/12 bg-cyan-100/26 p-1 backdrop-blur-sm">
-      <div className="grid min-h-[72px] grid-cols-1 gap-1 content-start">
+      <div className="grid min-h-[86px] grid-cols-1 gap-1 content-start">
         {timeline.map((slot) => (
-          <div key={slot.time} className="min-w-0 rounded-md border border-slate-700/10 bg-white/28 p-1">
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900">
+          <div key={slot.time} className="min-w-0 rounded-md border border-slate-700/10 bg-white/28 p-1.5">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-slate-900">
               {slot.time}–{slot.doubles[0]?.endTime ?? slot.singleA[0]?.endTime ?? slot.singleB[0]?.endTime ?? slot.time}
             </p>
 
@@ -184,6 +194,79 @@ function PitchDayCell({ bookings }: { bookings: ScheduleBooking[] }) {
   );
 }
 
+function TodayPitchPanel({
+  pitch,
+  dayLabel,
+  dateLabel,
+  bookings,
+}: {
+  pitch: string;
+  dayLabel: string;
+  dateLabel: string;
+  bookings: ScheduleBooking[];
+}) {
+  const timeline = buildTimeline(bookings);
+
+  return (
+    <section className="flex h-[80vh] flex-col rounded-[1.75rem] border border-cyan-700/18 bg-white/30 p-4 shadow-lg shadow-slate-900/6 backdrop-blur-sm">
+      <div className="mb-4 flex items-end justify-between gap-3 border-b border-cyan-800/10 pb-3">
+        <div>
+          <p className="text-[clamp(1.15rem,2vw,1.65rem)] font-bold leading-tight text-slate-950">{pitch}</p>
+          <p className="text-sm font-semibold text-slate-700">
+            {dayLabel} {dateLabel}
+          </p>
+        </div>
+      </div>
+
+      {timeline.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-sky-700/18 bg-white/38 px-4 text-center text-base font-medium text-slate-600">
+          Inga bokningar idag för denna plan.
+        </div>
+      ) : (
+        <div className="grid flex-1 content-start gap-3 overflow-y-auto pr-1">
+          {timeline.map((slot) => (
+            <div key={`${pitch}-${slot.time}`} className="rounded-2xl border border-slate-700/10 bg-white/45 p-3">
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-slate-900">
+                {slot.time}-{slot.doubles[0]?.endTime ?? slot.singleA[0]?.endTime ?? slot.singleB[0]?.endTime ?? slot.time}
+              </p>
+
+              {slot.doubles.length > 0 ? (
+                <div className="space-y-2">
+                  {slot.doubles.map((booking) => (
+                    <BookingCard key={booking.id} booking={booking} density="comfortable" />
+                  ))}
+                </div>
+              ) : null}
+
+              {slot.singleA.length > 0 || slot.singleB.length > 0 ? (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-700">Halva A</p>
+                    {slot.singleA.length > 0 ? (
+                      slot.singleA.map((booking) => <BookingCard key={booking.id} booking={booking} density="comfortable" />)
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-white/50 px-3 py-2 text-xs text-slate-500">Ingen bokning</div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-700">Halva B</p>
+                    {slot.singleB.length > 0 ? (
+                      slot.singleB.map((booking) => <BookingCard key={booking.id} booking={booking} density="comfortable" />)
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-white/50 px-3 py-2 text-xs text-slate-500">Ingen bokning</div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function getIsoWeekNumber(date: Date) {
   // Räknar ISO-vecka så veckonumret stämmer med svensk kalender.
   const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -200,6 +283,26 @@ function getStartOfIsoWeek(referenceDate: Date) {
   date.setDate(date.getDate() - day + 1);
   date.setHours(0, 0, 0, 0);
   return date;
+}
+
+function getCurrentWeekdayIndex() {
+  const day = new Date().getDay();
+  return day === 0 ? 6 : day - 1;
+}
+
+function getActiveDayIndex(weekStartDate: Date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const weekStart = new Date(weekStartDate);
+  weekStart.setHours(0, 0, 0, 0);
+
+  const difference = Math.round((today.getTime() - weekStart.getTime()) / 86400000);
+  if (difference >= 0 && difference < weekdayOrder.length) {
+    return difference;
+  }
+
+  return getCurrentWeekdayIndex();
 }
 
 function formatWeekdayDate(startDate: Date, dayIndex: number) {
@@ -269,6 +372,7 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
   const [loadError, setLoadError] = useState(initialError ?? '');
   const [lastAttemptAt, setLastAttemptAt] = useState<string>('');
   const [legacyMode] = useState(() => detectLegacyMode());
+  const [activeView, setActiveView] = useState<DisplayMode>('week');
 
   useEffect(() => {
     let active = true;
@@ -335,6 +439,16 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
     };
   }, []);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setActiveView((currentView) => (currentView === 'week' ? 'today' : 'week'));
+    }, viewRotationMs);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
   const matrix = useMemo<ScheduleBooking[][][]>(() => {
     if (!schedule) {
       return [];
@@ -371,6 +485,21 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
     }
     return getStartOfIsoWeek(new Date());
   }, [schedule]);
+
+  const activeDayIndex = useMemo(() => getActiveDayIndex(weekStartDate), [weekStartDate]);
+
+  const activeDay = weekdayOrder[activeDayIndex] ?? 'Monday';
+
+  const todayPitchData = useMemo(() => {
+    if (!schedule) {
+      return [] as Array<{ pitch: string; bookings: ScheduleBooking[] }>;
+    }
+
+    return pitchRows.map((pitch, pitchIndex) => ({
+      pitch,
+      bookings: matrix[pitchIndex]?.[activeDayIndex] ?? [],
+    }));
+  }, [activeDayIndex, matrix, schedule]);
 
   const legacyPitchData = useMemo(() => {
     if (!schedule) {
@@ -409,8 +538,8 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
     return (
       <div style={{ margin: '0 auto', width: '100%', maxWidth: '100%', padding: '12px', color: '#0f172a', boxSizing: 'border-box' }}>
         <div style={{ background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(15,23,42,0.2)', borderRadius: '10px', padding: '10px 12px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700 }}>Ringvallen schema</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px' }}>Veckoplan för fotbollsplaner - Vecka {weekNumber}</div>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>Ringvallen IP schema</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px' }}>Aktiviteter för veckan - Vecka {weekNumber}</div>
           {loadError ? <div style={{ marginTop: '6px', fontSize: '12px', color: '#92400e' }}>Info: {loadError}</div> : null}
         </div>
 
@@ -468,12 +597,14 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
   }
 
   return (
-    <div className="mx-auto flex w-[95vw] max-w-[95vw] flex-col gap-2 bg-transparent p-2 text-slate-950 lg:p-3">
+    <div className="mx-auto flex w-[99vw] max-w-[99vw] flex-col gap-2 bg-transparent p-1 text-slate-950 lg:p-2">
         <header className="rounded-2xl border border-white/35 bg-white/44 p-3">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-800">Ringvallen schema</p>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-950 xl:text-3xl">Veckoplan för fotbollsplaner</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 xl:text-3xl">
+                {activeView === 'week' ? 'Aktiviter för veckan' : 'Dagens aktiviteter'}
+              </h1>
             </div>
             <div className="flex items-center gap-2.5">
               <div className="rounded-full border border-sky-700/30 bg-sky-100/85 px-3 py-1.5 text-xs font-semibold text-sky-900">
@@ -483,52 +614,67 @@ export function ScheduleView({ initialSchedule, initialError }: ScheduleViewProp
           </div>
         </header>
 
-        <main className="overflow-hidden rounded-2xl border border-white/35 bg-white/26 p-2">
-          <div className="grid grid-cols-[clamp(92px,11vw,170px)_repeat(7,minmax(0,1fr))] grid-rows-[62px_repeat(4,auto)] content-start gap-x-1 gap-y-[6px]">
-            <div className="flex h-[62px] min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-sm font-semibold text-slate-950">Plan</div>
+        <main className="overflow-hidden rounded-2xl border border-white/35 bg-white/26 p-1.5">
+          {activeView === 'week' ? (
+            <div className="grid grid-cols-[clamp(96px,11.5vw,178px)_repeat(7,minmax(0,1fr))] grid-rows-[70px_repeat(4,auto)] content-start gap-x-1 gap-y-[7px]">
+              <div className="flex h-[70px] min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-1.5 text-center text-base font-semibold text-slate-950">Plan</div>
 
-            {weekdayOrder.map((day) => (
-              <div
-                key={day}
-                className="flex h-[62px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-cyan-700/18 bg-cyan-100/50 px-2 py-1 text-slate-950"
-              >
-                <p className="text-center text-[clamp(0.95rem,1.4vw,1.125rem)] font-bold leading-none">{dayLabels[day]}</p>
-                <p className="text-center text-[11px] font-semibold leading-none text-slate-800">{formatWeekdayDate(weekStartDate, weekdayOrder.indexOf(day))}</p>
-                <div className="grid grid-cols-2 overflow-hidden rounded-md border border-cyan-800/10 text-center text-[10px] font-semibold leading-none text-slate-900">
-                  <span className="border-r border-cyan-800/10 bg-cyan-50/44 py-[3px] pb-[5px]">A</span>
-                  <span className="bg-cyan-50/44 py-[3px] pb-[5px]">B</span>
-                </div>
-              </div>
-            ))}
-
-            {pitchRows.map((pitch, pitchIndex) => (
-              <div key={pitch} className="contents">
+              {weekdayOrder.map((day) => (
                 <div
-                  key={`${pitch}-label`}
-                  className="flex min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-2 text-center text-slate-950"
+                  key={day}
+                  className="flex h-[70px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-cyan-700/18 bg-cyan-100/50 px-2 py-1 text-slate-950"
                 >
-                  <div className="my-auto w-full">
-                    <p className="text-[clamp(1rem,1.8vw,1.5rem)] font-bold leading-tight">{pitch}</p>
+                  <p className="text-center text-[clamp(1.02rem,1.55vw,1.22rem)] font-bold leading-none">{dayLabels[day]}</p>
+                  <p className="text-center text-xs font-semibold leading-none text-slate-800">{formatWeekdayDate(weekStartDate, weekdayOrder.indexOf(day))}</p>
+                  <div className="grid grid-cols-2 overflow-hidden rounded-md border border-cyan-800/10 text-center text-[11px] font-semibold leading-none text-slate-900">
+                    <span className="border-r border-cyan-800/10 bg-cyan-50/44 py-[4px] pb-[6px]">A</span>
+                    <span className="bg-cyan-50/44 py-[4px] pb-[6px]">B</span>
                   </div>
                 </div>
+              ))}
 
-                {weekdayOrder.map((day, dayIndex) => (
-                  <PitchDayCell key={`${pitch}-${day}`} bookings={matrix[pitchIndex][dayIndex]} />
-                ))}
-              </div>
-            ))}
+              {pitchRows.map((pitch, pitchIndex) => (
+                <div key={pitch} className="contents">
+                  <div
+                    key={`${pitch}-label`}
+                    className="flex min-w-0 items-center justify-center rounded-xl border border-sky-700/20 bg-sky-200/58 px-2 py-2 text-center text-slate-950"
+                  >
+                    <div className="my-auto w-full">
+                      <p className="text-[clamp(1.08rem,1.95vw,1.6rem)] font-bold leading-tight">{pitch}</p>
+                    </div>
+                  </div>
 
-            {loading ? (
-              <div className="col-span-8 rounded-xl border border-sky-700/25 bg-white/34 p-2 text-center text-sm text-sky-950">
-                Laddar senaste schemat...
-              </div>
-            ) : null}
-          </div>
+                  {weekdayOrder.map((day, dayIndex) => (
+                    <PitchDayCell key={`${pitch}-${day}`} bookings={matrix[pitchIndex][dayIndex]} />
+                  ))}
+                </div>
+              ))}
+
+              {loading ? (
+                <div className="col-span-8 rounded-xl border border-sky-700/25 bg-white/34 p-2 text-center text-sm text-sky-950">
+                  Laddar senaste schemat...
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {todayPitchData.map((pitchData) => (
+                <TodayPitchPanel
+                  key={`${pitchData.pitch}-${activeDay}`}
+                  pitch={pitchData.pitch}
+                  dayLabel={dayLabels[activeDay]}
+                  dateLabel={formatWeekdayDate(weekStartDate, activeDayIndex)}
+                  bookings={pitchData.bookings}
+                />
+              ))}
+            </div>
+          )}
         </main>
 
         <footer className="rounded-2xl border border-white/35 bg-white/44 px-3 py-1.5 text-[11px] text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-semibold text-sky-900">Uppdaterad: {formatUpdatedTimestamp(schedule.lastUpdated)}</p>
+            {activeView === 'today' ? <p className="text-slate-600">Växlar vy automatiskt var 15:e sekund.</p> : null}
           </div>
         </footer>
     </div>
